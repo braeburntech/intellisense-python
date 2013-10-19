@@ -15,8 +15,8 @@ logging.basicConfig()
 
 from dateutil.tz import tzutc
 
-import analytics
-import analytics.utils
+import intellisense
+import intellisense.utils
 
 secret = 'testsecret'
 
@@ -32,24 +32,24 @@ def on_failure(data, error):
 class AnalyticsBasicTests(unittest.TestCase):
 
     def setUp(self):
-        analytics.init(secret, log_level=logging.DEBUG)
+        intellisense.init(secret, log_level=logging.DEBUG)
 
-        analytics.on_success(on_success)
-        analytics.on_failure(on_failure)
+        intellisense.on_success(on_success)
+        intellisense.on_failure(on_failure)
 
     def test_timezone_utils(self):
 
         now = datetime.now()
         utcnow = datetime.now(tz=tzutc())
 
-        self.assertTrue(analytics.utils.is_naive(now))
-        self.assertFalse(analytics.utils.is_naive(utcnow))
+        self.assertTrue(intellisense.utils.is_naive(now))
+        self.assertFalse(intellisense.utils.is_naive(utcnow))
 
-        fixed = analytics.utils.guess_timezone(now)
+        fixed = intellisense.utils.guess_timezone(now)
 
-        self.assertFalse(analytics.utils.is_naive(fixed))
+        self.assertFalse(intellisense.utils.is_naive(fixed))
 
-        shouldnt_be_edited = analytics.utils.guess_timezone(utcnow)
+        shouldnt_be_edited = intellisense.utils.guess_timezone(utcnow)
 
         self.assertEqual(utcnow, shouldnt_be_edited)
 
@@ -76,7 +76,7 @@ class AnalyticsBasicTests(unittest.TestCase):
 
         pre_clean_keys = combined.keys()
 
-        analytics.default_client._clean(combined)
+        intellisense.default_client._clean(combined)
 
         self.assertEqual(combined.keys(), pre_clean_keys)
         
@@ -85,67 +85,67 @@ class AnalyticsBasicTests(unittest.TestCase):
         data = {
             'created': datetime(2012, 3, 4, 5, 6, 7, 891011),
         }
-        result = json.dumps(data, cls=analytics.utils.DatetimeSerializer)
+        result = json.dumps(data, cls=intellisense.utils.DatetimeSerializer)
         
         self.assertEqual(result, '{"created": "2012-03-04T05:06:07.891011"}')
 
     def test_async_basic_identify(self):
         # flush after every message
-        analytics.default_client.flush_at = 1
-        analytics.default_client.async = True
+        intellisense.default_client.flush_at = 1
+        intellisense.default_client.async = True
 
-        last_identifies = analytics.stats.identifies
-        last_successful = analytics.stats.successful
-        last_flushes = analytics.stats.flushes
+        last_identifies = intellisense.stats.identifies
+        last_successful = intellisense.stats.successful
+        last_flushes = intellisense.stats.flushes
 
-        analytics.identify('ilya@analytics.io', {
+        intellisense.identify('ilya@analytics.io', {
             "Subscription Plan": "Free",
             "Friends": 30
         })
 
-        self.assertEqual(analytics.stats.identifies, last_identifies + 1)
+        self.assertEqual(intellisense.stats.identifies, last_identifies + 1)
 
         # this should flush because we set the flush_at to 1
-        self.assertEqual(analytics.stats.flushes, last_flushes + 1)
+        self.assertEqual(intellisense.stats.flushes, last_flushes + 1)
 
         # this should do nothing, as the async thread is currently active
-        analytics.flush()
+        intellisense.flush()
 
         # we should see no more flushes here
-        self.assertEqual(analytics.stats.flushes, last_flushes + 1)
+        self.assertEqual(intellisense.stats.flushes, last_flushes + 1)
 
         sleep(1)
 
-        self.assertEqual(analytics.stats.successful, last_successful + 1)
+        self.assertEqual(intellisense.stats.successful, last_successful + 1)
 
     def test_async_basic_track(self):
 
-        analytics.default_client.flush_at = 50
-        analytics.default_client.async = True
+        intellisense.default_client.flush_at = 50
+        intellisense.default_client.async = True
 
-        last_tracks = analytics.stats.tracks
-        last_successful = analytics.stats.successful
+        last_tracks = intellisense.stats.tracks
+        last_successful = intellisense.stats.successful
 
-        analytics.track('ilya@analytics.io', 'Played a Song', {
+        intellisense.track('ilya@analytics.io', 'Played a Song', {
             "Artist": "The Beatles",
             "Song": "Eleanor Rigby"
         })
 
-        self.assertEqual(analytics.stats.tracks, last_tracks + 1)
+        self.assertEqual(intellisense.stats.tracks, last_tracks + 1)
 
-        analytics.flush()
+        intellisense.flush()
 
         sleep(2)
 
-        self.assertEqual(analytics.stats.successful, last_successful + 1)
+        self.assertEqual(intellisense.stats.successful, last_successful + 1)
 
     def test_async_full_identify(self):
 
-        analytics.default_client.flush_at = 1
-        analytics.default_client.async = True
+        intellisense.default_client.flush_at = 1
+        intellisense.default_client.async = True
 
-        last_identifies = analytics.stats.identifies
-        last_successful = analytics.stats.successful
+        last_identifies = intellisense.stats.identifies
+        last_successful = intellisense.stats.successful
 
         traits = {
             "Subscription Plan": "Free",
@@ -164,132 +164,132 @@ class AnalyticsBasicTests(unittest.TestCase):
             "language": "en-us"
         }
 
-        analytics.identify('ilya@analytics.io', traits,
+        intellisense.identify('ilya@analytics.io', traits,
             context=context, timestamp=datetime.now())
 
-        self.assertEqual(analytics.stats.identifies, last_identifies + 1)
+        self.assertEqual(intellisense.stats.identifies, last_identifies + 1)
 
         sleep(2)
 
-        self.assertEqual(analytics.stats.successful, last_successful + 1)
+        self.assertEqual(intellisense.stats.successful, last_successful + 1)
 
     def test_async_full_track(self):
 
-        analytics.default_client.flush_at = 1
-        analytics.default_client.async = True
+        intellisense.default_client.flush_at = 1
+        intellisense.default_client.async = True
 
-        last_tracks = analytics.stats.tracks
-        last_successful = analytics.stats.successful
+        last_tracks = intellisense.stats.tracks
+        last_successful = intellisense.stats.successful
 
         properties = {
             "Artist": "The Beatles",
             "Song": "Eleanor Rigby"
         }
 
-        analytics.track('ilya@analytics.io', 'Played a Song',
+        intellisense.track('ilya@analytics.io', 'Played a Song',
             properties, timestamp=datetime.now())
 
-        self.assertEqual(analytics.stats.tracks, last_tracks + 1)
+        self.assertEqual(intellisense.stats.tracks, last_tracks + 1)
 
         sleep(1)
 
-        self.assertEqual(analytics.stats.successful, last_successful + 1)
+        self.assertEqual(intellisense.stats.successful, last_successful + 1)
 
     def test_alias(self):
 
         session_id = str(randint(1000000, 99999999))
         user_id = 'bob+'+session_id + '@gmail.com'
 
-        analytics.default_client.flush_at = 1
-        analytics.default_client.async = False
+        intellisense.default_client.flush_at = 1
+        intellisense.default_client.async = False
 
-        last_aliases = analytics.stats.aliases
-        last_successful = analytics.stats.successful
+        last_aliases = intellisense.stats.aliases
+        last_successful = intellisense.stats.successful
 
-        analytics.identify(session_id, traits={'AnonymousTrait': 'Who am I?'})
-        analytics.track(session_id, 'Anonymous Event')
+        intellisense.identify(session_id, traits={'AnonymousTrait': 'Who am I?'})
+        intellisense.track(session_id, 'Anonymous Event')
 
         # alias the user
-        analytics.alias(session_id, user_id)
+        intellisense.alias(session_id, user_id)
 
-        analytics.identify(user_id, traits={'IdentifiedTrait': 'A Hunk'})
-        analytics.track(user_id, 'Identified Event')
+        intellisense.identify(user_id, traits={'IdentifiedTrait': 'A Hunk'})
+        intellisense.track(user_id, 'Identified Event')
 
-        self.assertEqual(analytics.stats.aliases, last_aliases + 1)
-        self.assertEqual(analytics.stats.successful, last_successful + 5)
+        self.assertEqual(intellisense.stats.aliases, last_aliases + 1)
+        self.assertEqual(intellisense.stats.successful, last_successful + 5)
 
     def test_blocking_flush(self):
 
-        analytics.default_client.flush_at = 1
-        analytics.default_client.async = False
+        intellisense.default_client.flush_at = 1
+        intellisense.default_client.async = False
 
-        last_tracks = analytics.stats.tracks
-        last_successful = analytics.stats.successful
+        last_tracks = intellisense.stats.tracks
+        last_successful = intellisense.stats.successful
 
         properties = {
             "Artist": "The Beatles",
             "Song": "Eleanor Rigby"
         }
 
-        analytics.track('ilya@analytics.io', 'Played a Song',
+        intellisense.track('ilya@analytics.io', 'Played a Song',
             properties, timestamp=datetime.today())
 
-        self.assertEqual(analytics.stats.tracks, last_tracks + 1)
-        self.assertEqual(analytics.stats.successful, last_successful + 1)
+        self.assertEqual(intellisense.stats.tracks, last_tracks + 1)
+        self.assertEqual(intellisense.stats.successful, last_successful + 1)
 
     def test_time_policy(self):
 
-        analytics.default_client.async = False
-        analytics.default_client.flush_at = 1
+        intellisense.default_client.async = False
+        intellisense.default_client.flush_at = 1
 
         # add something so we have a reason to flush
-        analytics.track('ilya@analytics.io', 'Played a Song', {
+        intellisense.track('ilya@analytics.io', 'Played a Song', {
             "Artist": "The Beatles",
             "Song": "Eleanor Rigby"
         })
 
         # flush to reset flush count
-        analytics.flush()
+        intellisense.flush()
 
-        last_flushes = analytics.stats.flushes
+        last_flushes = intellisense.stats.flushes
 
         # set the flush size trigger high
-        analytics.default_client.flush_at = 50
+        intellisense.default_client.flush_at = 50
         # set the time policy to 1 second from now
-        analytics.default_client.flush_after = timedelta(seconds=1)
+        intellisense.default_client.flush_after = timedelta(seconds=1)
 
-        analytics.track('ilya@analytics.io', 'Played a Song', {
+        intellisense.track('ilya@analytics.io', 'Played a Song', {
             "Artist": "The Beatles",
             "Song": "Eleanor Rigby"
         })
 
         # that shouldn't of triggered a flush
-        self.assertEqual(analytics.stats.flushes, last_flushes)
+        self.assertEqual(intellisense.stats.flushes, last_flushes)
 
         # sleep past the time-flush policy
         sleep(1.2)
 
         # submit another track to trigger the policy
-        analytics.track('ilya@analytics.io', 'Played a Song', {
+        intellisense.track('ilya@analytics.io', 'Played a Song', {
             "Artist": "The Beatles",
             "Song": "Eleanor Rigby"
         })
 
-        self.assertEqual(analytics.stats.flushes, last_flushes + 1)
+        self.assertEqual(intellisense.stats.flushes, last_flushes + 1)
 
     def test_performance(self):
 
         to_send = 100
 
-        target = analytics.stats.successful + to_send
+        target = intellisense.stats.successful + to_send
 
-        analytics.default_client.async = True
-        analytics.default_client.flush_at = 200
-        analytics.default_client.max_flush_size = 50
-        analytics.default_client.set_log_level(logging.DEBUG)
+        intellisense.default_client.async = True
+        intellisense.default_client.flush_at = 200
+        intellisense.default_client.max_flush_size = 50
+        intellisense.default_client.set_log_level(logging.DEBUG)
 
         for i in range(to_send):
-            analytics.track('ilya@analytics.io', 'Played a Song', {
+            intellisense.track('ilya@analytics.io', 'Played a Song', {
                 "Artist": "The Beatles",
                 "Song": "Eleanor Rigby"
             })
@@ -297,11 +297,11 @@ class AnalyticsBasicTests(unittest.TestCase):
         print 'Finished submitting into the queue'
 
         start = time()
-        while analytics.stats.successful < target:
-            print ('Successful ', analytics.stats.successful, 'Left',
-                (target - analytics.stats.successful),
+        while intellisense.stats.successful < target:
+            print ('Successful ', intellisense.stats.successful, 'Left',
+                (target - intellisense.stats.successful),
                 'Duration ', (time() - start))
-            analytics.flush()
+            intellisense.flush()
             sleep(1.0)
 
 if __name__ == '__main__':
